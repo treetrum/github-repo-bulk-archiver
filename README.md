@@ -1,41 +1,58 @@
 # Bulk Archive GitHub Repos
 
-Simple Bash tool to bulk archive repositories using **GitHub CLI (`gh`)** and **`jq`**.
+Interactive CLI to bulk archive repositories using **GitHub CLI (`gh`)**.
 
 ## Prerequisites
 
+- Node.js 18+
 - `gh` installed and authenticated (`gh auth login`)
-- `jq` installed
+
+## Install
+
+```bash
+npm install
+```
 
 ## Usage
 
 ```bash
-chmod +x archive-repos.sh
-./archive-repos.sh <owner> [--name-regex <regex>] [--dry-run]
+node archive-repos.mjs <owner> [--name-regex <regex>] [--dry-run] [--all]
 ```
 
-### Examples
-
-Archive all non-archived repos for an org/user:
+You can also run:
 
 ```bash
-./archive-repos.sh my-org
+npm run archive -- <owner>
 ```
 
-Only archive repos whose full name matches a regex:
+## Examples
+
+Interactive picker (multi-select):
 
 ```bash
-./archive-repos.sh my-org --name-regex '^my-org/legacy-'
+node archive-repos.mjs my-org
 ```
 
-Preview without making changes:
+Filter by regex:
 
 ```bash
-./archive-repos.sh my-org --dry-run
+node archive-repos.mjs my-org --name-regex '^my-org/legacy-'
+```
+
+Dry run:
+
+```bash
+node archive-repos.mjs my-org --dry-run
+```
+
+Skip picker and archive all matches:
+
+```bash
+node archive-repos.mjs my-org --all
 ```
 
 ## Notes
 
-- The script skips repos already archived.
-- It tries the owner as an **org** first, then as a **user**.
-- Uses GitHub API via `gh api` with pagination.
+- Picker controls: **space** to toggle, **enter** to confirm.
+- Script skips repos already archived.
+- It tries owner as an **org** first, then as a **user**.

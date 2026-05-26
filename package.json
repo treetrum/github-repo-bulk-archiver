@@ -1,0 +1,17 @@
+{
+  "name": "github-repo-bulk-archiver",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "archive-repos": "./archive-repos.mjs"
+  },
+  "scripts": {
+    "start": "node ./archive-repos.mjs",
+    "archive": "node ./archive-repos.mjs"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.4",
+    "commander": "^14.0.2"
+  }
+}
