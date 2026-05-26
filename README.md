@@ -15,14 +15,29 @@ npm install
 
 ## Usage
 
+Run directly with Node:
+
 ```bash
 node archive-repos.mjs <owner> [--name-regex <regex>] [--dry-run] [--all]
 ```
 
-You can also run:
+Or via npm script:
 
 ```bash
 npm run archive -- <owner>
+```
+
+Or install the CLI command globally from this repo:
+
+```bash
+npm link
+archive-repos <owner> [--name-regex <regex>] [--dry-run] [--all]
+```
+
+To remove the global link later:
+
+```bash
+npm unlink -g github-repo-bulk-archiver
 ```
 
 ## Examples

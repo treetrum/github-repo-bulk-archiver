@@ -63,12 +63,18 @@ function filterRepos(repos, regex) {
   return repos
     .filter((r) => !r.archived)
     .filter((r) => regex.test(r.full_name))
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    .sort((a, b) => {
+      const aTime = new Date(a.updated_at ?? 0).getTime();
+      const bTime = new Date(b.updated_at ?? 0).getTime();
+      if (aTime !== bTime) return aTime - bTime; // oldest updated first
+      return a.full_name.localeCompare(b.full_name);
+    });
 }
 
-async function archiveRepo(fullName, dryRun) {
+async function archiveRepo(fullName, repoUrl, dryRun) {
   if (dryRun) {
-    console.log(`[dry-run] would archive: ${fullName}`);
+    const label = repoUrl ? `${fullName} (${repoUrl})` : fullName;
+    console.log(`[dry-run] would archive: ${label}`);
     return true;
   }
 
@@ -111,6 +117,7 @@ program
     }
 
     const filtered = filterRepos(repos, regex);
+    const repoByFullName = new Map(filtered.map((r) => [r.full_name, r]));
 
     console.log(
       `Found ${filtered.length} non-archived repo(s) for '${owner}' matching regex '${options.nameRegex}'.`
@@ -126,7 +133,7 @@ program
         message: 'Select repos to archive (space to toggle, enter to confirm)',
         pageSize: 20,
         choices: filtered.map((r) => ({
-          name: r.full_name,
+          name: `${r.full_name} (${r.html_url})`,
           value: r.full_name
         }))
       });
@@ -138,7 +145,11 @@ program
     }
 
     console.log(`\nSelected ${selected.length} repo(s):`);
-    for (const name of selected) console.log(`  - ${name}`);
+    for (const name of selected) {
+      const repo = repoByFullName.get(name);
+      const url = repo?.html_url ? ` (${repo.html_url})` : '';
+      console.log(`  - ${name}${url}`);
+    }
 
     if (!options.dryRun) {
       const ok = await confirm({ message: 'Proceed with archiving?', default: false });
@@ -150,16 +161,30 @@ program
 
     let success = 0;
     let failed = 0;
+    const archivedWithLinks = [];
 
     for (const fullName of selected) {
-      const ok = await archiveRepo(fullName, options.dryRun);
-      if (ok) success += 1;
-      else failed += 1;
+      const repoUrl = repoByFullName.get(fullName)?.html_url;
+      const ok = await archiveRepo(fullName, repoUrl, options.dryRun);
+      if (ok) {
+        success += 1;
+        if (!options.dryRun && repoUrl) {
+          archivedWithLinks.push({ fullName, repoUrl });
+        }
+      } else {
+        failed += 1;
+      }
     }
 
     if (options.dryRun) {
       console.log('Dry run complete.');
     } else {
+      if (archivedWithLinks.length > 0) {
+        console.log('\nArchived repos:');
+        for (const repo of archivedWithLinks) {
+          console.log(`  - ${repo.fullName}: ${repo.repoUrl}`);
+        }
+      }
       console.log(`Done. Archived: ${success}, Failed: ${failed}`);
     }
   });
